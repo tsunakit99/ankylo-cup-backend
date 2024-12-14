@@ -16,9 +16,8 @@ message SignUpRequest {}
 
 message SignUpResponse {
   string user_id = 1;
-  string email = 2;
-  string display_name = 3;
-  string avatar_url = 4;
+  string display_name = 2;
+  string avatar_url = 3;
 }
 
 message GetUserRequest {

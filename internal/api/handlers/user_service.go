@@ -51,7 +51,6 @@ func (s *UserServiceServer) SignUp(ctx context.Context, req *pb.SignUpRequest) (
 
 		user = models.User{
 			ID:          uid,
-			Email:       u.UserInfo.Email,
 			DisplayName: displayName,
 			AvatarURL:   avatarURL,
 			Coin: 0,
@@ -69,7 +68,6 @@ func (s *UserServiceServer) SignUp(ctx context.Context, req *pb.SignUpRequest) (
 
 	return &pb.SignUpResponse{
 		UserId:      user.ID,
-		Email:       user.Email,
 		DisplayName: user.DisplayName,
 		AvatarUrl:   user.AvatarURL,
 	}, nil
