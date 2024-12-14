@@ -9,6 +9,7 @@ import (
 	"github.com/tsunakit99/ankylo-cup-backend/internal/db"
 	"github.com/tsunakit99/ankylo-cup-backend/proto/pb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -29,6 +30,8 @@ func main() {
 	}
 
 	s := grpc.NewServer()
+	// 4. サーバーリフレクションの設定
+	reflection.Register(s)
 	userService := &grpcapi.UserServiceServer{}
 	pb.RegisterUserServiceServer(s, userService)
 
