@@ -1,38 +1,48 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net"
 
-	grpcapi "github.com/tsunakit99/ankylo-cup-backend/internal/api/grpc"
+	"github.com/tsunakit99/ankylo-cup-backend/internal/api/handlers"
+	"github.com/tsunakit99/ankylo-cup-backend/internal/auth"
 	"github.com/tsunakit99/ankylo-cup-backend/internal/config"
-	"github.com/tsunakit99/ankylo-cup-backend/internal/db"
-	"github.com/tsunakit99/ankylo-cup-backend/proto/pb"
+	pb "github.com/tsunakit99/ankylo-cup-backend/internal/pb/user"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
-	// Load config
 	cfg := config.LoadConfig()
 
-	// データベースに接続
-	database, err := db.ConnectDB(cfg)
+	ctx := context.Background()
+	app := auth.InitFirebaseApp(ctx, cfg.CredentialsFilePath)
+	authClient, err := app.Auth(ctx)
+	if err != nil {
+		log.Fatalf("Failed to get Auth client: %v", err)
+	}
+
+	// GORMでのDB接続
+	dbConn, err := gorm.Open(postgres.Open(cfg.DSN), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect DB: %v", err)
 	}
 	log.Println("DB connected successfully")
-	defer database.Close()
 
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
-	// 4. サーバーリフレクションの設定
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(handlers.AuthInterceptor(authClient)),
+	)
 	reflection.Register(s)
-	userService := &grpcapi.UserServiceServer{}
+
+	userService := handlers.NewUserServiceServer(authClient, dbConn)
 	pb.RegisterUserServiceServer(s, userService)
 
 	log.Println("gRPC server running on :50051")
