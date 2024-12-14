@@ -54,6 +54,7 @@ func (s *UserServiceServer) SignUp(ctx context.Context, req *pb.SignUpRequest) (
 			Email:       u.UserInfo.Email,
 			DisplayName: displayName,
 			AvatarURL:   avatarURL,
+			Coin: 0,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
 		}
