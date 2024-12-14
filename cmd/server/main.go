@@ -8,7 +8,10 @@ import (
 	"github.com/tsunakit99/ankylo-cup-backend/internal/api/handlers"
 	"github.com/tsunakit99/ankylo-cup-backend/internal/auth"
 	"github.com/tsunakit99/ankylo-cup-backend/internal/config"
-	pb "github.com/tsunakit99/ankylo-cup-backend/internal/pb/user"
+	pbg "github.com/tsunakit99/ankylo-cup-backend/internal/pb/game"
+	pbr "github.com/tsunakit99/ankylo-cup-backend/internal/pb/room"
+	pbs "github.com/tsunakit99/ankylo-cup-backend/internal/pb/score"
+	pbu "github.com/tsunakit99/ankylo-cup-backend/internal/pb/user"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"gorm.io/driver/postgres"
@@ -43,7 +46,14 @@ func main() {
 	reflection.Register(s)
 
 	userService := handlers.NewUserServiceServer(authClient, dbConn)
-	pb.RegisterUserServiceServer(s, userService)
+	pbu.RegisterUserServiceServer(s, userService)
+	roomService := handlers.NewRoomServiceServer(dbConn)
+	pbr.RegisterRoomServiceServer(s, roomService)
+	gameService := handlers.NewGameServiceServer(dbConn)
+	pbg.RegisterGameServiceServer(s, gameService)
+	scoreService := handlers.NewScoreServiceServer(dbConn)
+	pbs.RegisterScoreServiceServer(s, scoreService)
+
 
 	log.Println("gRPC server running on :50051")
 	if err := s.Serve(lis); err != nil {
