@@ -8,10 +8,11 @@ import (
 	"github.com/tsunakit99/ankylo-cup-backend/internal/api/handlers"
 	"github.com/tsunakit99/ankylo-cup-backend/internal/auth"
 	"github.com/tsunakit99/ankylo-cup-backend/internal/config"
-	pbg "github.com/tsunakit99/ankylo-cup-backend/internal/pb/game"
-	pbr "github.com/tsunakit99/ankylo-cup-backend/internal/pb/room"
-	pbs "github.com/tsunakit99/ankylo-cup-backend/internal/pb/score"
-	pbu "github.com/tsunakit99/ankylo-cup-backend/internal/pb/user"
+	pb_chinchiro "github.com/tsunakit99/ankylo-cup-backend/internal/pb/chinchiro"
+	pb_game "github.com/tsunakit99/ankylo-cup-backend/internal/pb/game"
+	pb_room "github.com/tsunakit99/ankylo-cup-backend/internal/pb/room"
+	pb_score "github.com/tsunakit99/ankylo-cup-backend/internal/pb/score"
+	pb_user "github.com/tsunakit99/ankylo-cup-backend/internal/pb/user"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"gorm.io/driver/postgres"
@@ -41,19 +42,18 @@ func main() {
 	}
 
 	s := grpc.NewServer(
+		// ユニキャストRPC用のInterceptor
 		grpc.UnaryInterceptor(handlers.AuthInterceptor(authClient)),
+		// ストリーミングRPC用のInterceptor
+		grpc.StreamInterceptor(handlers.StreamAuthInterceptor(authClient)),
 	)
 	reflection.Register(s)
 
-	userService := handlers.NewUserServiceServer(authClient, dbConn)
-	pbu.RegisterUserServiceServer(s, userService)
-	roomService := handlers.NewRoomServiceServer(dbConn)
-	pbr.RegisterRoomServiceServer(s, roomService)
-	gameService := handlers.NewGameServiceServer(dbConn)
-	pbg.RegisterGameServiceServer(s, gameService)
-	scoreService := handlers.NewScoreServiceServer(dbConn)
-	pbs.RegisterScoreServiceServer(s, scoreService)
-
+	 pb_room.RegisterRoomServiceServer(s, handlers.NewRoomServiceServer(dbConn))
+    pb_chinchiro.RegisterChinchiroServiceServer(s, handlers.NewChinchiroServiceServer())
+    pb_user.RegisterUserServiceServer(s, handlers.NewUserServiceServer(authClient, dbConn))
+    pb_game.RegisterGameServiceServer(s, handlers.NewGameServiceServer(dbConn))
+    pb_score.RegisterScoreServiceServer(s, handlers.NewScoreServiceServer(dbConn))
 
 	log.Println("gRPC server running on :50051")
 	if err := s.Serve(lis); err != nil {

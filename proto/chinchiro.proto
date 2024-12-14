@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package chinchiro;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/tsunakit99/ankylo-cup-backend/internal/pb/chinchiro";
+
+// ターンステータスの定義
+enum TurnStatus {
+  UNKNOWN = 0;
+  PLAYER1_TURN = 1;
+  PLAYER2_TURN = 2;
+}
+
+service ChinchiroService {
+  // 双方向ストリーミングRPC
+  rpc PlayChinchiro (stream ChinchiroMessage) returns (stream ChinchiroMessage);
+}
+
+message ChinchiroMessage {
+  string user_id = 1; // 送信者のユーザーID
+  repeated int32 dice_rolls = 2; // 出目
+  google.protobuf.Timestamp timestamp = 3; // 送信時刻
+  TurnStatus turn_status = 4; // 現在のターンステータス
+}
